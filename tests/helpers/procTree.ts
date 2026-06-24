@@ -33,7 +33,10 @@ export async function waitFor(cond: () => boolean, timeoutMs = 5000, stepMs = 50
 
 /** Wait for the pid file to be written, then read the grandchild pid from it. */
 export async function readPidFile(file: string): Promise<number> {
-  await waitFor(() => existsSync(file) && readFileSync(file, "utf8").trim().length > 0);
+  const ready = await waitFor(() => existsSync(file) && readFileSync(file, "utf8").trim().length > 0);
+  if (!ready) {
+    throw new Error(`readPidFile: pid file never appeared at ${file} (the child stage may have failed to start)`);
+  }
   return parseInt(readFileSync(file, "utf8").trim(), 10);
 }
 

@@ -27,7 +27,7 @@ maybe("server shutdown reaps in-flight child trees (POSIX)", async () => {
 
   // Resolve once we see the JSON-RPC response to the initialize request (id 1).
   let buf = "";
-  const initialized = new Promise<void>((resolve) => {
+  const initialized = new Promise<void>((resolve, reject) => {
     server.stdout.on("data", (d: Buffer) => {
       buf += d.toString();
       let nl: number;
@@ -42,6 +42,7 @@ maybe("server shutdown reaps in-flight child trees (POSIX)", async () => {
         }
       }
     });
+    server.on("close", (code) => reject(new Error(`server exited before initialize response (code ${code})`)));
   });
 
   send({
