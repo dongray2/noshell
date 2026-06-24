@@ -1,4 +1,8 @@
 node_modules/
 dist/
 *.tsbuildinfo
+
+# GitNexus-generated, kept local
 .gitnexus
+.claude/
+AGENTS.md
