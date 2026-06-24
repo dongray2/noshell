@@ -1,0 +1,24 @@
+{
+  "name": "noshell-mcp",
+  "version": "0.1.0",
+  "description": "Shell-free exec MCP server: run programs with explicit argv, no shell parsing.",
+  "type": "module",
+  "bin": { "noshell-mcp": "dist/index.js" },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.9"
+  }
+}
