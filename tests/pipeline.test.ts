@@ -94,3 +94,21 @@ test("spawn-error propagation: ENOENT recorded in stages array", async () => {
   expect(r.stages.length).toBe(1);
   expect(r.stages[0].code).toBeNull();
 });
+
+test("exhausted budget guard: no stage runs when the deadline has already passed", async () => {
+  // timeoutMs:0 makes the deadline equal to start time, so the `remaining <= 0`
+  // guard fires on the first iteration before any stage is spawned. This is the
+  // only deterministic way to exercise that between-stages guard (a stage that
+  // completes is by definition still under budget).
+  const r = await pipelineTool({
+    timeoutMs: 0,
+    stages: [
+      { path: NODE, args: ["-e", "process.stdout.write('x')"] },
+      { path: NODE, args: ["-e", "process.stdout.write('y')"] },
+    ],
+  });
+  expect(r.timedOut).toBe(true);
+  expect(r.code).toBeNull();
+  expect(r.stdout).toBe("");
+  expect(r.stages).toEqual([]); // guard returns before any stage runs or is recorded
+});
