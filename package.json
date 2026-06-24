@@ -1,6 +1,6 @@
 {
   "name": "noshell-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Shell-free exec MCP server: run programs with explicit argv, no shell parsing.",
   "license": "MIT",
   "type": "module",
@@ -11,6 +11,14 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dongray2/noshell.git"
+  },
+  "homepage": "https://github.com/dongray2/noshell#readme",
+  "bugs": {
+    "url": "https://github.com/dongray2/noshell/issues"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
