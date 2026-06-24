@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import { killTree, killTreeForceSync } from "../src/killTree.js";
 import { uniqueTmpFile, isAlive, waitFor, readPidFile, spawnTreeParent, cleanupTree } from "./helpers/procTree.js";
 
@@ -30,8 +30,7 @@ test("killTreeForceSync terminates the whole process tree", async () => {
 });
 
 test("kill helpers are no-ops when the child has no pid", () => {
-  const fake = spawn(process.execPath, ["-e", "0"]);
-  Object.defineProperty(fake, "pid", { value: undefined });
+  const fake = { pid: undefined } as unknown as ChildProcess;
   expect(() => killTree(fake, 100).cancelEscalation()).not.toThrow();
   expect(() => killTreeForceSync(fake)).not.toThrow();
 });
