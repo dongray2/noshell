@@ -1,6 +1,6 @@
 {
   "name": "noshell-mcp",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Shell-free exec MCP server: run programs with explicit argv, no shell parsing.",
   "license": "MIT",
   "type": "module",
