@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import { killTree, type KillTreeHandle } from "./killTree.js";
+import { track } from "./liveChildren.js";
 
 export interface StageInput {
   path: string;
@@ -11,6 +13,7 @@ export interface RunOptions {
   stdin?: string;
   timeoutMs?: number;
   maxBytes?: number;
+  killGraceMs?: number;
 }
 
 export interface StageResult {
@@ -25,17 +28,21 @@ export interface StageResult {
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_MAX_BYTES = 1_000_000;
+const DEFAULT_KILL_GRACE_MS = 2000;
 
 export function runStage(stage: StageInput, opts: RunOptions = {}): Promise<StageResult> {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
+  const graceMs = opts.killGraceMs ?? DEFAULT_KILL_GRACE_MS;
 
   return new Promise<StageResult>((resolve) => {
     const child = spawn(stage.path, stage.args ?? [], {
       shell: false,
+      detached: process.platform !== "win32",
       cwd: stage.cwd,
       env: { ...process.env, ...(stage.env ?? {}) },
     });
+    const untrack = track(child);
 
     const outChunks: Buffer[] = [];
     const errChunks: Buffer[] = [];
@@ -44,6 +51,7 @@ export function runStage(stage: StageInput, opts: RunOptions = {}): Promise<Stag
     let truncated = false;
     let timedOut = false;
     let settled = false;
+    let killHandle: KillTreeHandle | undefined;
 
     const capture = (chunks: Buffer[], len: number, chunk: Buffer): number => {
       if (len < maxBytes) {
@@ -63,7 +71,7 @@ export function runStage(stage: StageInput, opts: RunOptions = {}): Promise<Stag
 
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill("SIGKILL");
+      killHandle = killTree(child, graceMs);
     }, timeoutMs);
 
     child.stdout.on("data", (c: Buffer) => { outLen = capture(outChunks, outLen, c); });
@@ -73,6 +81,8 @@ export function runStage(stage: StageInput, opts: RunOptions = {}): Promise<Stag
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      killHandle?.cancelEscalation();
+      untrack();
       resolve({
         code: null, stdout: "", stderr: "",
         timedOut, truncated,
@@ -84,8 +94,12 @@ export function runStage(stage: StageInput, opts: RunOptions = {}): Promise<Stag
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      killHandle?.cancelEscalation();
+      untrack();
       resolve({
-        code,
+        // On Windows, taskkill /T /F causes the child to exit with a numeric code
+        // rather than null; coerce to null when we triggered the kill (timedOut).
+        code: timedOut ? null : code,
         stdout: Buffer.concat(outChunks).toString("utf8"),
         stderr: Buffer.concat(errChunks).toString("utf8"),
         timedOut, truncated,
