@@ -1,14 +1,7 @@
 import { runStage, type StageResult } from "./runStage.js";
+import type { ExecInput } from "./schemas.js";
 
-export interface ExecInput {
-  path: string;
-  args?: string[];
-  stdin?: string;
-  cwd?: string;
-  env?: Record<string, string>;
-  timeoutMs?: number;
-  maxBytes?: number;
-}
+export type { ExecInput };
 
 export function execTool(input: ExecInput): Promise<StageResult> {
   return runStage(

@@ -1,12 +1,7 @@
-import { runStage, type StageInput, type StageResult } from "./runStage.js";
+import { runStage, type StageResult } from "./runStage.js";
+import type { PipelineInput } from "./schemas.js";
 
-export interface PipelineInput {
-  stages: StageInput[];
-  stdin?: string;
-  pipefail?: boolean;
-  timeoutMs?: number;
-  maxBytes?: number;
-}
+export type { PipelineInput };
 
 export interface PipelineResult {
   code: number | null;
