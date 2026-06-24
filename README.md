@@ -8,7 +8,23 @@ tool; it sits alongside it for the cases where shell parsing is fragile.
 
 ## Install / register
 
-Add to your `.mcp.json` (or Claude Code MCP config):
+No global install needed — `npx` fetches the published package on first run.
+
+### Claude Code (CLI)
+
+```bash
+# local scope (this machine + current project)
+claude mcp add --transport stdio noshell -- npx -y noshell-mcp
+
+# or project scope (writes a shared .mcp.json, checked into the repo)
+claude mcp add --transport stdio noshell --scope project -- npx -y noshell-mcp
+```
+
+The `--` separator is required; everything after it is the command Claude Code runs.
+
+### Claude Code (`.mcp.json`)
+
+Add to a `.mcp.json` at your repo root:
 
 ```json
 {
@@ -20,6 +36,30 @@ Add to your `.mcp.json` (or Claude Code MCP config):
   }
 }
 ```
+
+### Claude Desktop (`claude_desktop_config.json`)
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "noshell": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "noshell-mcp"]
+    }
+  }
+}
+```
+
+(`"type": "stdio"` is required in Claude Desktop; it's optional in `.mcp.json`.)
+
+**Pin a version** by replacing `noshell-mcp` with `noshell-mcp@0.2.0`. To pass
+environment variables to the server, add an `"env": { "KEY": "value" }` object to
+its config block (or `--env KEY=value` on the CLI). After editing a config file,
+restart the client so it picks up the server.
 
 ## Recommended CLAUDE.md policy (the "middle" approach)
 
