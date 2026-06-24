@@ -1,4 +1,5 @@
 import { test, expect } from "vitest";
+import { readFileSync } from "node:fs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../src/server.js";
@@ -43,4 +44,32 @@ test("pipeline tool runs end-to-end through the protocol", async () => {
   });
   const payload = JSON.parse((res.content as { type: string; text: string }[])[0].text);
   expect(payload.stdout).toBe("abab");
+});
+
+test("exec honors maxBytes through the schema (truncates)", async () => {
+  const client = await connect();
+  const res = await client.callTool({
+    name: "exec",
+    arguments: { path: NODE, args: ["-e", "process.stdout.write('x'.repeat(2000))"], maxBytes: 1000 },
+  });
+  const payload = JSON.parse((res.content as { type: string; text: string }[])[0].text);
+  expect(payload.truncated).toBe(true);
+  expect(payload.stdout.length).toBe(1000);
+});
+
+test("pipeline honors maxBytes through the schema (truncates)", async () => {
+  const client = await connect();
+  const res = await client.callTool({
+    name: "pipeline",
+    arguments: { stages: [{ path: NODE, args: ["-e", "process.stdout.write('x'.repeat(2000))"] }], maxBytes: 1000 },
+  });
+  const payload = JSON.parse((res.content as { type: string; text: string }[])[0].text);
+  expect(payload.truncated).toBe(true);
+  expect(payload.stdout.length).toBe(1000);
+});
+
+test("server reports the version from package.json", async () => {
+  const client = await connect();
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  expect(client.getServerVersion()?.version).toBe(pkg.version);
 });

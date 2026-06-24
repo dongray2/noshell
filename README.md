@@ -49,6 +49,7 @@ Run one program.
 | `cwd` | string | server launch dir | working directory |
 | `env` | object | — | **merged over** the server env, not a replacement |
 | `timeoutMs` | number | `120000` | killed on expiry |
+| `maxBytes` | number | `1000000` | cap on captured stdout/stderr per stream; output beyond it sets `truncated` |
 
 Returns `{ code, stdout, stderr, timedOut, truncated }`, or
 `{ error, message, ... }` if the program can't be spawned.
@@ -63,12 +64,13 @@ buffered, no temp files, no shell pipe).
 | `stdin` | string | — | fed to stage 0 only |
 | `pipefail` | boolean | `true` | fail on first non-zero stage |
 | `timeoutMs` | number | `120000` | budget for the whole pipeline |
+| `maxBytes` | number | `1000000` | cap on each stage's captured stdout/stderr per stream; output beyond it sets `truncated` |
 
 Returns `{ code, stdout, stderr, stages, timedOut, truncated }`.
 
 ## Limits & caveats
 
-- **Output cap:** stdout/stderr are truncated at 1 MB each; `truncated: true` flags it.
+- **Output cap:** stdout/stderr are truncated at 1 MB each per stream by default; `truncated: true` flags it. Override per call with `maxBytes`.
 - **Windows `.cmd`/`.bat` are not supported.** Because `noshell` never uses a shell,
   Windows batch shims (which require `cmd.exe`) won't run. `.exe` programs and
   scripts with a registered interpreter are fine. Use `Bash` for `.cmd`/`.bat`.
