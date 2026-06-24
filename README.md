@@ -73,6 +73,7 @@ Returns `{ code, stdout, stderr, stages, timedOut, truncated }`.
   Windows batch shims (which require `cmd.exe`) won't run. `.exe` programs and
   scripts with a registered interpreter are fine. Use `Bash` for `.cmd`/`.bat`.
 - **No interactive/TTY programs** and no background process management in this version.
+- **Timeout kills the direct child only.** On timeout, `kill(SIGKILL)` targets the immediate child process; any grandchild processes it spawned are not separately reaped. This is a v1 limitation.
 
 ## Development
 

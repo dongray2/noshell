@@ -51,6 +51,7 @@ export async function pipelineTool(input: PipelineInput): Promise<PipelineResult
     truncated = truncated || result.truncated;
 
     if (result.error) {
+      stageCodes.push({ code: result.code });
       return {
         code: null, stdout: result.stdout, stderr: result.stderr,
         stages: stageCodes, timedOut: result.timedOut, truncated,
@@ -58,6 +59,7 @@ export async function pipelineTool(input: PipelineInput): Promise<PipelineResult
       };
     }
     if (result.timedOut) {
+      stageCodes.push({ code: result.code });
       return {
         code: null, stdout: result.stdout, stderr: result.stderr,
         stages: stageCodes, timedOut: true, truncated,

@@ -49,6 +49,7 @@ export function runStage(stage: StageInput, opts: RunOptions = {}): Promise<Stag
       if (len < maxBytes) {
         const remaining = maxBytes - len;
         if (chunk.length > remaining) {
+          // Slicing at an exact byte boundary may split a multibyte UTF-8 codepoint, decoding to U+FFFD — acceptable since output is already flagged truncated.
           chunks.push(chunk.subarray(0, remaining));
           truncated = true;
         } else {

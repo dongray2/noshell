@@ -67,3 +67,30 @@ test("aggregates truncation across stages", async () => {
   expect(r.truncated).toBe(true);
   expect(r.stdout.length).toBe(1000);
 });
+
+test("inter-stage deadline: timed-out stage recorded in stages array", async () => {
+  const r = await pipelineTool({
+    timeoutMs: 200,
+    stages: [
+      { path: NODE, args: ["-e", "setTimeout(() => {}, 10000)"] },
+      { path: NODE, args: ["-e", "process.stdout.write('after')"] },
+    ],
+  });
+  expect(r.timedOut).toBe(true);
+  expect(r.code).toBeNull();
+  expect(r.stages.length).toBe(1);
+  expect(r.stages[0].code).toBeNull();
+});
+
+test("spawn-error propagation: ENOENT recorded in stages array", async () => {
+  const r = await pipelineTool({
+    stages: [
+      { path: "noshell-no-such-binary-xyz" },
+      { path: NODE, args: ["-e", "process.stdout.write('after')"] },
+    ],
+  });
+  expect(r.error).toBe("ENOENT");
+  expect(r.code).toBeNull();
+  expect(r.stages.length).toBe(1);
+  expect(r.stages[0].code).toBeNull();
+});
