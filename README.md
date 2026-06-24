@@ -73,7 +73,14 @@ Returns `{ code, stdout, stderr, stages, timedOut, truncated }`.
   Windows batch shims (which require `cmd.exe`) won't run. `.exe` programs and
   scripts with a registered interpreter are fine. Use `Bash` for `.cmd`/`.bat`.
 - **No interactive/TTY programs** and no background process management in this version.
-- **Timeout kills the direct child only.** On timeout, `kill(SIGKILL)` targets the immediate child process; any grandchild processes it spawned are not separately reaped. This is a v1 limitation.
+- **Timeouts kill the whole process tree.** On timeout, noshell terminates the
+  timed-out program *and all of its descendants* — `SIGTERM`, then `SIGKILL`
+  after a 2 s grace period on POSIX; `taskkill /T /F` on Windows.
+- **Server shutdown reaps in-flight trees.** When the noshell server is stopped
+  (SIGINT/SIGTERM or its stdin closing) it force-kills any still-running
+  exec/pipeline child trees first. On Windows this covers Ctrl+C and normal
+  exit; a hard external kill of the server process (e.g. Task Manager /
+  `taskkill` on noshell itself) cannot be intercepted and may leave orphans.
 
 ## Development
 
